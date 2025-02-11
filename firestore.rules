@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Rules for the clinics collection
+    match /clinics/{clinicId} {
+      allow create, update: if request.resource.data.keys().hasAll(['clinicName']);
+      allow read, delete: if true; // Allow reading and deleting clinics
+    }
+
+    // Rules for the staff collection
+    match /staff/{staffId} {
+      allow create, update: if request.resource.data.keys().hasAll(['staffId']) &&
+                            exists(/databases/$(database)/documents/clinics/$(request.resource.data.clinicId));
+      allow read, delete: if true; // Allow reading and deleting staff
+    }
+
+    // General rule allowing read and write until the specified date
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2025, 3, 31);
+    }
+  }
+}

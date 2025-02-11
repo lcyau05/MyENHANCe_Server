@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claims</title>
+    <style>
+        .claim-button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .points-display {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Claims</h1>
+    <div id="claims-container"></div>
+    <h1>Points Redemption</h1>
+    <div id="points-display" class="points-display"></div>
+    <div id="redeem-container"></div>
+
+    <script>
+        async function fetchClaimsAndPoints() {
+            const patientId = new URLSearchParams(window.location.search).get('patientId');
+            if (!patientId) {
+                alert('Patient ID is required');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://getclaims-57t4hog7ga-uc.a.run.app/getClaims?patientId=${patientId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP Error! Status: ${response.status}`);
+                }
+                const { claims, points } = await response.json();
+
+                const claimsContainer = document.getElementById('claims-container');
+                claimsContainer.innerHTML = '';
+
+                claims.forEach(claim => {
+                    const button = document.createElement('button');
+                    button.className = 'claim-button';
+                    button.textContent = `${claim.name} (Used: ${claim.used}, Limit: ${claim.limit})`;
+                    button.onclick = () => incrementClaim(patientId, claim.name);
+                    claimsContainer.appendChild(button);
+                });
+
+                // Display points
+                document.getElementById('points-display').innerText = `Current Points: ${points}`;
+
+                // Show redemption buttons based on points
+                const maxRedemption = Math.min(points / 10, 10); // Max $10 redemption, 10 points = $1
+                const redeemContainer = document.getElementById('redeem-container');
+                redeemContainer.innerHTML = '';
+
+                for (let i = 1; i <= maxRedemption; i++) {
+                    const button = document.createElement('button');
+                    button.className = 'redeem-button';
+                    button.textContent = `$${i} (Redeem ${i * 10} points)`;
+                    button.onclick = () => redeemPoints(patientId, i * 10);
+                    redeemContainer.appendChild(button);
+                }
+            } catch (error) {
+                console.error('Error fetching claims:', error);
+            }
+        }
+
+        async function incrementClaim(patientId, claimName) {
+            try {
+                const response = await fetch(`https://useclaim-57t4hog7ga-uc.a.run.app/useClaim`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ patientId, claimName }),
+                });
+
+                if (response.ok) {
+                    alert('Claim incremented successfully');
+                    fetchClaimsAndPoints(); // Refresh the claims list
+                } else {
+                    alert('Failed to increment claim');
+                }
+            } catch (error) {
+                console.error('Error incrementing claim:', error);
+            }
+        }
+
+        async function redeemPoints(patientId, pointsToRedeem) {
+            if (pointsToRedeem <= 0) {
+                alert('Invalid points to redeem');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://us-central1-ehance24p4.cloudfunctions.net/redeemPoints`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ patientId, pointsToRedeem })
+                });
+
+                if (response.ok) {
+                    alert(`${pointsToRedeem / 10} SGD redeemed successfully!`);
+                    fetchClaimsAndPoints(); // Refresh the points and claims
+                } else {
+                    alert('Failed to redeem points');
+                }
+            } catch (error) {
+                console.error('Error redeeming points:', error);
+            }
+        }
+
+
+        window.onload = fetchClaimsAndPoints;
+    </script>
+</body>
+
+</html>

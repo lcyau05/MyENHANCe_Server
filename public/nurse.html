@@ -34,7 +34,7 @@
             }
 
             try {
-                const response = await fetch(`https://getclaims-57t4hog7ga-uc.a.run.app/getClaims?patientId=${patientId}`);
+                const response = await fetch(`https://getclaims-gpxa2jomqa-uc.a.run.app/getClaims?patientId=${patientId}`);
                 if (!response.ok) {
                     throw new Error(`HTTP Error! Status: ${response.status}`);
                 }
@@ -73,7 +73,7 @@
 
         async function incrementClaim(patientId, claimName) {
             try {
-                const response = await fetch(`https://useclaim-57t4hog7ga-uc.a.run.app/useClaim`, {
+                const response = await fetch(`https://useclaim-gpxa2jomqa-uc.a.run.app/useClaim`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -99,7 +99,7 @@
             }
 
             try {
-                const response = await fetch(`https://us-central1-ehance24p4.cloudfunctions.net/redeemPoints`, {
+                const response = await fetch(`https://redeempoints-gpxa2jomqa-uc.a.run.app/redeemPoints`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
